@@ -41,7 +41,7 @@ theme_set(theme_minimal())
 small_trains <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-02-26/small_trains.csv") 
 
 # Lisa's garden data
-data("garden_harvest")
+data(garden_harvest)
 
 # Lisa's Mallorca cycling data
 mallorca_bike_day7 <- read_csv("https://www.dropbox.com/s/zc6jan4ltmjtvy0/mallorca_bike_day7.csv?dl=1") %>% 
@@ -82,12 +82,87 @@ Once your repository is created, you should always open your **project** rather 
 ## Warm-up exercises from tutorial
 
   1. Choose 2 graphs you have created for ANY assignment in this class and add interactivity using the `ggplotly()` function.
+
+```{r, echo=FALSE}
+cucumber_weight<- garden_harvest %>% 
+  select(vegetable, date, weight) %>% 
+  filter(vegetable %in% c("cucumbers")) %>% 
+  arrange(desc(weight)) %>% 
   
+  ggplot(aes(y = weight, x = date, fill = date)) +
+  geom_col() +
+  
+  scale_x_date(date_breaks = "1 week", date_labels = "%D") +
+  
+  labs(title = "~Date of greatest cucumber yield by weight in grams~",
+       x = "DATE", 
+       y = "WEIGHT") +
+  
+  guides(x = guide_axis(angle = 90))
+
+ggplotly(cucumber_weight)
+  
+  
+```
+
+
+
+```{r, fig.alt= "This bar graph displays each cucumber harvest in the given range with date breaks by week. The peak harvest week was August 17th to August 24th. The bars are colored based on the yield amount with the greatest yields being darker and the lesser yield being lighter. Since last week, the color scale and grouping of harvests has been fixed." }
+
+improved_cucumber_weight <- garden_harvest %>% 
+  select(vegetable, date, weight, variety) %>% 
+  filter(vegetable %in% c("cucumbers")) %>% 
+  group_by(vegetable, variety, date) %>% 
+  summarize(weight_in_lbs = sum(weight*0.00220462)) %>% 
+  arrange(desc(weight_in_lbs)) %>% 
+  
+  ggplot(aes(y = weight_in_lbs, x = date, fill = (weight_in_lbs)))+
+  geom_col() +
+  
+  scale_fill_viridis_c(direction = -1)+
+  
+  scale_x_date(date_breaks = "1 week", date_labels = "%D") +
+  
+  labs(title = "Which week yielded the greatest pickling cucumber harvest in pounds?",
+       x = "", 
+       y = "Pounds",
+       fill = "",
+       caption = "By Cat Terres. Data sourced from garden_harvest, provided by Lisa Lendway") +
+  theme_grey()
+
+ggplotly(improved_cucumber_weight)
+```
 
   
   2. Use animation to tell an interesting story with the `small_trains` dataset that contains data from the SNCF (National Society of French Railways). These are Tidy Tuesday data! Read more about it [here](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-26).
+  
+```{r, fig.height=6, fig.width=10, echo=FALSE}
+small_trains %>% 
+  head(20) %>% 
+  group_by(departure_station) %>% 
+  summarize(late_arrivals = sum(num_arriving_late)) %>% 
+  arrange(departure_station) %>% 
+  
+  ggplot(aes(x = late_arrivals, 
+             y = departure_station,
+             col = departure_station))+
+  geom_jitter() +
+  labs(x = "Late Arrivals",
+       y = "Departure Stations",
+       title = "Which station, out of those selected, has the most late arrivals?") +
 
+transition_states(late_arrivals)
+  
+  
+```
 
+```{r, eval=FALSE, echo=FALSE}
+anim_save("latearrivals.gif")
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("latearrivals.gif")
+```
 ## Garden data
 
   3. In this exercise, you will create a stacked area plot that reveals itself over time (see the `geom_area()` examples [here](https://ggplot2.tidyverse.org/reference/position_stack.html)). You will look at cumulative harvest of tomato varieties over time. I have filtered the data to the tomatoes and find the *daily* harvest in pounds for each variety. The `complete()` function creates a row for all unique `date`/`variety` combinations. If a variety is not harvested on one of the harvest dates in the dataset, it is filled with a value of 0. 
@@ -121,6 +196,11 @@ garden_harvest %>%
   * CHALLENGE: use the `ggimage` package and `geom_image` to add a bike image instead of a red point. You can use [this](https://raw.githubusercontent.com/llendway/animation_and_interactivity/master/bike.png) image. See [here](https://goodekat.github.io/presentations/2019-isugg-gganimate-spooky/slides.html#35) for an example. 
   * Add something of your own! And comment on if you prefer this to the static map and why or why not.
   
+```{r}
+
+```
+
+  
   5. In this exercise, you get to meet Lisa's sister, Heather! She is a proud Mac grad, currently works as a Data Scientist where she uses R everyday, and for a few years (while still holding a full-time job) she was a pro triathlete. You are going to map one of her races. The data from each discipline of the Ironman 70.3 Pan Am championships, Panama is in a separate file - `panama_swim`, `panama_bike`, and `panama_run`. Create a similar map to the one you created with my cycling data. You will need to make some small changes: 1. combine the files putting them in swim, bike, run order (HINT: `bind_rows()`), 2. make the leading dot a different color depending on the event (for an extra challenge, make it a different image using `geom_image()!), 3. CHALLENGE (optional): color by speed, which you will need to compute on your own from the data. You can read Heather's race report [here](https://heatherlendway.com/2016/02/10/ironman-70-3-pan-american-championships-panama-race-report/). She is also in the Macalester Athletics [Hall of Fame](https://athletics.macalester.edu/honors/hall-of-fame/heather-lendway/184) and still has records at the pool. 
   
 ```{r}
@@ -149,6 +229,11 @@ states_map <- map_data("state")
 ## Your first `shiny` app (for next week!)
 
   7. This app will also use the COVID data. Make sure you load that data and all the libraries you need in the `app.R` file you create. You should create a new project for the app, separate from the homework project. Below, you will post a link to the app that you publish on shinyapps.io. You will create an app to compare states' daily number of COVID cases per 100,000 over time. The x-axis will be date. You will have an input box where the user can choose which states to compare (`selectInput()`), a slider where the user can choose the date range, and a submit button to click once the user has chosen all states they're interested in comparing. The graph should display a different line for each state, with labels either on the graph or in a legend. Color can be used if needed. 
+  
+```{r}
+
+```
+
   
 Put the link to your app here: 
   
