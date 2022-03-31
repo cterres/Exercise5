@@ -171,6 +171,7 @@ knitr::include_graphics("latearrivals.gif")
   * Use the data you just made to create a static cumulative harvest area plot, with the areas filled with different colors for each variety and arranged (HINT: `fct_reorder()`) from most to least harvested weights (most on the bottom).  
   * Add animation to reveal the plot over date. Instead of having a legend, place the variety names directly on the graph (refer back to the tutorial for how to do this).
 
+#can't figure out how to do cumsum
 ```{r}
 garden_harvest %>% 
   filter(vegetable == "tomatoes") %>% 
@@ -190,14 +191,36 @@ garden_harvest %>%
   Requirements:
   * Plot on a map using `ggmap`.  
   * Show "current" location with a red point. 
-  * Show path up until the current point.  
-  * Color the path according to elevation.  
+  * Show path up until the current point.   
+  * Color the path according to elevation.  #
   * Show the time in the subtitle.  
   * CHALLENGE: use the `ggimage` package and `geom_image` to add a bike image instead of a red point. You can use [this](https://raw.githubusercontent.com/llendway/animation_and_interactivity/master/bike.png) image. See [here](https://goodekat.github.io/presentations/2019-isugg-gganimate-spooky/slides.html#35) for an example. 
   * Add something of your own! And comment on if you prefer this to the static map and why or why not.
   
 ```{r}
+mallorca_map <- get_stamenmap(
+    bbox = c(left = 2.1190, bottom = 39.2057, right = 4.2517, top = 40.0402), 
+    maptype = "terrain",
+    zoom = 10 
+)
 
+ggmap(mallorca_map)
+```
+
+```{r}
+mallorca_map <- get_stamenmap(
+    bbox = c(left = 2.1190, bottom = 39.2057, right = 3.5, top = 40), 
+    maptype = "terrain",
+    zoom = 11
+)
+ggmap(mallorca_map) +
+  geom_path(data = mallorca_bike_day7 , 
+             aes(x = lon, y = lat, color = ele),
+             size = .5) +
+  scale_color_viridis_c(option = "magma") +
+  theme_map() +
+  theme(legend.background = element_blank())+
+  transition_reveal(time)
 ```
 
   
@@ -230,9 +253,7 @@ states_map <- map_data("state")
 
   7. This app will also use the COVID data. Make sure you load that data and all the libraries you need in the `app.R` file you create. You should create a new project for the app, separate from the homework project. Below, you will post a link to the app that you publish on shinyapps.io. You will create an app to compare states' daily number of COVID cases per 100,000 over time. The x-axis will be date. You will have an input box where the user can choose which states to compare (`selectInput()`), a slider where the user can choose the date range, and a submit button to click once the user has chosen all states they're interested in comparing. The graph should display a different line for each state, with labels either on the graph or in a legend. Color can be used if needed. 
   
-```{r}
-
-```
+#do you fork Lisa's data or what do you start with??
 
   
 Put the link to your app here: 
