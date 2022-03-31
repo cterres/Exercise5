@@ -136,7 +136,7 @@ ggplotly(improved_cucumber_weight)
   
   2. Use animation to tell an interesting story with the `small_trains` dataset that contains data from the SNCF (National Society of French Railways). These are Tidy Tuesday data! Read more about it [here](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-26).
   
-```{r, fig.height=6, fig.width=10, echo=FALSE}
+```{r, fig.height=6, fig.width=12, echo=FALSE}
 small_trains %>% 
   head(20) %>% 
   group_by(departure_station) %>% 
@@ -149,7 +149,8 @@ small_trains %>%
   geom_jitter() +
   labs(x = "Late Arrivals",
        y = "Departure Stations",
-       title = "Which station, out of those selected, has the most late arrivals?") +
+       title = "Which station, out of those selected, has 
+       the most late arrivals?") +
 
 transition_states(late_arrivals)
   
@@ -178,9 +179,24 @@ garden_harvest %>%
   group_by(date, variety) %>% 
   summarize(daily_harvest_lb = sum(weight)*0.00220462) %>% 
   ungroup() %>% 
+  mutate(cum_harvest = cumsum(daily_harvest_lb)) %>% 
   complete(variety, 
            date, 
-           fill = list(daily_harvest_lb = 0))
+           fill = list(daily_harvest_lb = 0)) %>% 
+  group_by(variety) %>% 
+  mutate(cum_harvest_lb = sum(daily_harvest_lb)) %>% 
+  
+  ggplot(aes(x = date,
+             y = daily_harvest_lb,
+             fill = fct_reorder(variety, cum_harvest_lb)))+
+  geom_area()+
+  geom_text(aes(label=variety))+
+  labs(title = "",
+       subtitle = "Date: {frame_along}",
+       fill = "legend title")+
+  transition_reveal(date)
+  
+  
   
 ```
 
@@ -189,17 +205,18 @@ garden_harvest %>%
 
   4. Map Lisa's `mallorca_bike_day7` bike ride using animation! 
   Requirements:
-  * Plot on a map using `ggmap`.  
+  * Plot on a map using `ggmap`.  #
   * Show "current" location with a red point. 
-  * Show path up until the current point.   
+  * Show path up until the current point.#   
   * Color the path according to elevation.  #
-  * Show the time in the subtitle.  
+  * Show the time in the subtitle.  #
   * CHALLENGE: use the `ggimage` package and `geom_image` to add a bike image instead of a red point. You can use [this](https://raw.githubusercontent.com/llendway/animation_and_interactivity/master/bike.png) image. See [here](https://goodekat.github.io/presentations/2019-isugg-gganimate-spooky/slides.html#35) for an example. 
   * Add something of your own! And comment on if you prefer this to the static map and why or why not.
   
+
 ```{r}
 mallorca_map <- get_stamenmap(
-    bbox = c(left = 2.1190, bottom = 39.2057, right = 4.2517, top = 40.0402), 
+    bbox = c(left = 2.2809, bottom = 39.4418, right = 3.0191, top = 39.7751), 
     maptype = "terrain",
     zoom = 10 
 )
@@ -209,27 +226,85 @@ ggmap(mallorca_map)
 
 ```{r}
 mallorca_map <- get_stamenmap(
-    bbox = c(left = 2.1190, bottom = 39.2057, right = 3.5, top = 40), 
+    bbox = c(left = 2.2809, bottom = 39.4418, right = 3.0191, top = 39.7751), 
     maptype = "terrain",
-    zoom = 11
+    zoom = 9
 )
+```
+
+```{r}
 ggmap(mallorca_map) +
+  geom_point(data = mallorca_bike_day7,
+             aes(x = lon, y = lat, size = speed),
+                 color = "red")+
   geom_path(data = mallorca_bike_day7 , 
              aes(x = lon, y = lat, color = ele),
              size = .5) +
+  labs(title = "Lisa's Bike Ride",
+       subtitle = "Timestamp: {frame_along}",
+       x = "", 
+       y = "")+
   scale_color_viridis_c(option = "magma") +
   theme_map() +
   theme(legend.background = element_blank())+
   transition_reveal(time)
 ```
 
-  
-  5. In this exercise, you get to meet Lisa's sister, Heather! She is a proud Mac grad, currently works as a Data Scientist where she uses R everyday, and for a few years (while still holding a full-time job) she was a pro triathlete. You are going to map one of her races. The data from each discipline of the Ironman 70.3 Pan Am championships, Panama is in a separate file - `panama_swim`, `panama_bike`, and `panama_run`. Create a similar map to the one you created with my cycling data. You will need to make some small changes: 1. combine the files putting them in swim, bike, run order (HINT: `bind_rows()`), 2. make the leading dot a different color depending on the event (for an extra challenge, make it a different image using `geom_image()!), 3. CHALLENGE (optional): color by speed, which you will need to compute on your own from the data. You can read Heather's race report [here](https://heatherlendway.com/2016/02/10/ironman-70-3-pan-american-championships-panama-race-report/). She is also in the Macalester Athletics [Hall of Fame](https://athletics.macalester.edu/honors/hall-of-fame/heather-lendway/184) and still has records at the pool. 
-  
 ```{r}
+anim_save("bike_ride.gif")
+```
+
+```{r}
+knitr::include_graphics("bike_ride.gif")
+```
+
+
+
+##c(left = 2.1190, bottom = 39.2057, right = 3.5, top = 40)
+  
+  5. In this exercise, you get to meet Lisa's sister, Heather! She is a proud Mac grad, currently works as a Data Scientist where she uses R everyday, and for a few years (while still holding a full-time job) she was a pro triathlete. You are going to map one of her races. The data from each discipline of the Ironman 70.3 Pan Am championships, Panama is in a separate file - `panama_swim`, `panama_bike`, and `panama_run`. Create a similar map to the one you created with my cycling data. You will need to make some small changes: 1. combine the files putting them in swim, bike, run order (HINT: `bind_rows()`), 2. #####make the leading dot a different color depending on the event### (for an extra challenge, make it a different image using `geom_image()!), 3. CHALLENGE (optional): color by speed, which you will need to compute on your own from the data. You can read Heather's race report [here](https://heatherlendway.com/2016/02/10/ironman-70-3-pan-american-championships-panama-race-report/). She is also in the Macalester Athletics [Hall of Fame](https://athletics.macalester.edu/honors/hall-of-fame/heather-lendway/184) and still has records at the pool. 
+
+
+```{r}
+panama_map <-get_stamenmap(
+ bbox = c(left = -79.6114, bottom = 8.9049, right = -79.4268, top = 9.0118), 
+    maptype = "terrain",
+    zoom = 12
+)
+ggmap(panama_map)
+```
+
+```{r}
+swim_bike_run <- bind_rows(panama_swim,panama_bike, panama_run)
+```
+
+```{r}
+ggmap(panama_map) +
+  geom_point(data = swim_bike_run,
+             aes(x = lon, y = lat, color = event),
+             size = 5)+
+  geom_path(data = swim_bike_run, 
+             aes(x = lon, y = lat),
+             size = .5) +
+  labs(title = "Heather's Triathlon",
+       subtitle = "Timestamp: {frame_along}",
+       color = "Event")+
+  theme_map() +
+  theme(legend.background = element_blank())+
+  transition_reveal(time)
+  
+  
+
 
 ```
   
+```{r}
+anim_save("heather_tri.gif")
+```
+
+```{r}
+knitr::include_graphics("heather_tri.gif")
+```
 ## COVID-19 data
 
   6. In this exercise you will animate a map of the US, showing how cumulative COVID-19 cases per 10,000 residents has changed over time. This is similar to exercises 11 & 12 from the previous exercises, with the added animation! So, in the end, you should have something like the static map you made there, but animated over all the days. The code below gives the population estimates for each state and loads the `states_map` data. Here is a list of details you should include in the plot:
@@ -249,11 +324,45 @@ census_pop_est_2018 <- read_csv("https://www.dropbox.com/s/6txwv3b4ng7pepe/us_ce
 states_map <- map_data("state")
 ```
 
+```{r, eval=FALSE}
+newest_covid <- covid19 %>% 
+  arrange(desc(date)) %>% 
+  group_by(state) %>% 
+  mutate(numberrow = 1:n()) %>% 
+  mutate(state = str_to_lower(`state`))
+
+covid_by_pop <- newest_covid %>% 
+  left_join(census_pop_est_2018,
+            by = c("state" = "state")) %>% 
+  mutate(per_10000 = (cases/est_pop_2018)*10000)
+
+us_covid_gif <- covid_by_pop %>% 
+  filter(date %in% seq(ymd("2020-1-15"), ymd("2022-3-15"), by = "months")) %>% 
+  ggplot() +
+  geom_map(map = states_map,
+           aes(map_id = state,
+               fill = per_10000)) +
+  labs(title = "Most Recent Cumulative Count of COVID-19 Cases by State Factoring in Population Density", 
+       fill = "Cases per 10,000", 
+       subtitle = "Date: {frame_along}") +
+  expand_limits(x = states_map$long, y = states_map$lat) + 
+  scale_fill_viridis_c(option = "rocket", direction = -1) +
+  theme_map() + 
+  theme(legend.background = element_blank())+
+  transition_reveal(date)
+
+
+animate(us_covid_gif, nframes = 200, duration = 10)
+anim_save("us_covid_gif.gif")
+```
+```{r, echo=FALSE}
+knitr::include_graphics("us_covid_gif.gif")
+```
 ## Your first `shiny` app (for next week!)
 
   7. This app will also use the COVID data. Make sure you load that data and all the libraries you need in the `app.R` file you create. You should create a new project for the app, separate from the homework project. Below, you will post a link to the app that you publish on shinyapps.io. You will create an app to compare states' daily number of COVID cases per 100,000 over time. The x-axis will be date. You will have an input box where the user can choose which states to compare (`selectInput()`), a slider where the user can choose the date range, and a submit button to click once the user has chosen all states they're interested in comparing. The graph should display a different line for each state, with labels either on the graph or in a legend. Color can be used if needed. 
   
-#do you fork Lisa's data or what do you start with??
+
 
   
 Put the link to your app here: 
